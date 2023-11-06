@@ -4,12 +4,16 @@ import openpyxl
 from lxml import etree
 from lxml import html
 import re
+import argparse
+
+
+
 
 def remove_html_tags(text):
     clean = re.compile('<.*?>')
     return re.sub(clean, '', text)
 
-def scrape_data(input_xlsx, url, output_xlsx):
+def scrape_data(input_xlsx, localfilename, output_xlsx):
     # Load the input Excel file
     workbook = openpyxl.load_workbook(input_xlsx)
     sheet = workbook.active
@@ -27,7 +31,7 @@ def scrape_data(input_xlsx, url, output_xlsx):
 #template
     rowObject = sheet.iter_cols(min_col=2, max_col=8, min_row=1, max_row= 1)  # +1 to adjust for 1-based indexing
     header_row = [cell.value for row in rowObject for cell in row]
-
+    
     #template
     rowObject = sheet.iter_cols(min_col=2, max_col=8, min_row=2, max_row= 2)  # +1 to adjust for 1-based indexing
     xpathtemplate = [cell.value for row in rowObject for cell in row]
@@ -57,8 +61,11 @@ def scrape_data(input_xlsx, url, output_xlsx):
     #print(counts)
     #exit()
 
-    with open("mcq.html", encoding="utf8") as file:
+    with open(localfilename, encoding="utf8") as file:
         contents = file.read()
+
+
+
     soup = BeautifulSoup(contents,'html.parser')
 
     
@@ -85,6 +92,7 @@ def scrape_data(input_xlsx, url, output_xlsx):
             if element:
                 text =  html.tostring(element[0], encoding="unicode")
                 text=remove_html_tags(text)
+             #   print(text)
             else:
                 text = ""  # Handle the case where the element is not found
             question_data.append(text)
@@ -93,14 +101,27 @@ def scrape_data(input_xlsx, url, output_xlsx):
         output_sheet.append(question_data)  # Add the answer from the input file
 
     # Save the output Excel file
-    output_workbook.save(output_xlsx)
+    output_workbook.save(output_xlsx+".xlsx")
+    print("File Scraped Successfully")
 
 if __name__ == "__main__":
-    #input_xlsx = input("Enter the input Excel file name: ")
-    #url = input("Enter the URL of the page to scrape: ")
-    #output_xlsx = input("Enter the output Excel file name: ")
-    input_xlsx="ParserData.xlsx"
-    url="https://www.includehelp.com/data-analytics/mcq.aspx"
-    output_xlsx="output.xlsx"
+    
 
-    scrape_data(input_xlsx, url, output_xlsx)
+    parser = argparse.ArgumentParser(description="Just an example",
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("--localfilename", help="File to scrape", required=True)
+    parser.add_argument("--xlsx_template", help=".xlsx file which has the templates to be parsed", required=True)
+    parser.add_argument("--output", help="output file name", required=True)
+
+    args = parser.parse_args()
+    config = vars(args) 
+    
+    
+
+    input_xlsx=args.xlsx_template
+    localfilename=args.localfilename
+    output_xlsx=args.output
+   
+
+    scrape_data(input_xlsx, localfilename, output_xlsx)
