@@ -27,4 +27,4 @@ The following information is what we wish to scrape
 
 We need to create an xlsx file with the following format
 
-![Alt text](excel%20screenshot.png)
+<img src="excel screenshot.png" width="128"/>
